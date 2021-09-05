@@ -7,11 +7,14 @@ Sub chart_cols(inputColumn As String, outputColumn As String, _
 ' for convenience.
 '
 ' by      : Leomar Duran <https://github.com/lduran2/>
-' when    : 2021-09-05 t03:02
+' when    : 2021-09-05 t03:10
 ' self    : https://github.com/lduran2/excel-chart-macro
-' version : 1.3
+' version : 1.3.1
 '
 ' changelog :
+'     v1.3.1 -- 2021-09-05 t03:10
+'         abstracted axes title labels
+'
 '     v1.3 -- 2021-09-05 t03:02
 '         added axes titles
 '
@@ -76,16 +79,24 @@ Sub chart_data(dataRange As String, _
     ' Add the chart title text
     ActiveChart.chartTitle.Text = chartTitle
     ' Add the transpose axis label
-    ActiveChart.Axes(xlCategory, xlPrimary).HasTitle = True
-    ActiveChart.Axes(xlCategory, xlPrimary).AxisTitle.Text = inputTitle
+    label_axes xlCategory, inputTitle
     ' Add the vertical axis label
-    ActiveChart.Axes(xlValue, xlPrimary).HasTitle = True
-    ActiveChart.Axes(xlValue, xlPrimary).AxisTitle.Text = outputTitle
+    label_axes xlValue, outputTitle
 
     MsgBox "Hello, world!"
 
 End Sub 'Sub chart_data(dataRange As String, _
 '   inputTitleCell As String, outputTitleCell As String _
 ' )
+' --------------------------------------------------------------------
+
+Sub label_axes(axesType As Variant, title As String)
+'
+' label_axes Subroutine
+' Labels the axis specified by axesType.
+'
+    ActiveChart.Axes(axesType, xlPrimary).HasTitle = True
+    ActiveChart.Axes(axesType, xlPrimary).AxisTitle.Text = title
+End Sub
 
 
