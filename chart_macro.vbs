@@ -7,11 +7,14 @@ Sub chart_cols(inputColumn As String, outputColumn As String, _
 ' for convenience.
 '
 ' by      : Leomar Duran <https://github.com/lduran2/>
-' when    : 2021-09-05 t03:10
+' when    : 2021-09-05 t03:29
 ' self    : https://github.com/lduran2/excel-chart-macro
-' version : 1.3.1
+' version : 1.4
 '
 ' changelog :
+'     v1.4 -- 2021-09-05 t03:29
+'         styled the chart's series line
+'
 '     v1.3.1 -- 2021-09-05 t03:10
 '         abstracted axes title labels
 '
@@ -79,24 +82,43 @@ Sub chart_data(dataRange As String, _
     ' Add the chart title text
     ActiveChart.chartTitle.Text = chartTitle
     ' Add the transpose axis label
-    label_axes xlCategory, inputTitle
+    label_axes ActiveChart, xlCategory, inputTitle
     ' Add the vertical axis label
-    label_axes xlValue, outputTitle
-
-    MsgBox "Hello, world!"
-
-End Sub 'Sub chart_data(dataRange As String, _
+    label_axes ActiveChart, xlValue, outputTitle
+    
+    ' Style the series line
+    style_chart_series ActiveChart.FullSeriesCollection(1)
+    
+End Sub 'chart_data(dataRange As String, _
 '   inputTitleCell As String, outputTitleCell As String _
 ' )
 ' --------------------------------------------------------------------
 
-Sub label_axes(axesType As Variant, title As String)
+Sub label_axes(aChart As chart, axesType As Variant, title As String)
 '
 ' label_axes Subroutine
 ' Labels the axis specified by axesType.
 '
-    ActiveChart.Axes(axesType, xlPrimary).HasTitle = True
-    ActiveChart.Axes(axesType, xlPrimary).AxisTitle.Text = title
+    aChart.Axes(axesType, xlPrimary).HasTitle = True
+    aChart.Axes(axesType, xlPrimary).AxisTitle.Text = title
+End Sub 'label_axes(aChart As chart, axesType As Variant, title As String)
+
+' --------------------------------------------------------------------
+Sub style_chart_series(aSeries As Series)
+'
+' style_chart_series Subroutine
+' Styles the chart's series as a thin sky blue line with no markers.
+'
+    Const MARKER_NONE = -4142   ' display no markers
+
+    ' Remove series markers
+    aSeries.MarkerStyle = MARKER_NONE
+    
+    ' line thickness [pt]
+    aSeries.Format.Line.Weight = 1.00#
+    ' line color [RGB]
+    aSeries.Format.Line.ForeColor.RGB = RGB(68, 114, 196)
+
 End Sub
 
 
