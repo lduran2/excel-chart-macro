@@ -7,11 +7,14 @@ Sub chart_cols(inputColumn As String, outputColumn As String, _
 ' for convenience.
 '
 ' by      : Leomar Duran <https://github.com/lduran2/>
-' when    : 2021-09-05 t01:52
+' when    : 2021-09-05 t03:02
 ' self    : https://github.com/lduran2/excel-chart-macro
-' version : 1.2
+' version : 1.3
 '
 ' changelog :
+'     v1.3 -- 2021-09-05 t03:02
+'         added axes titles
+'
 '     v1.2 -- 2021-09-05 t02:46
 '         added chart title, abstracted cell coordinating
 '
@@ -62,7 +65,7 @@ Sub chart_data(dataRange As String, _
     outputTitle = Range(outputTitleCell).Value
     
     ' Make the chart title
-    chartTitle = Join(Array(inputTitle, outputTitle), " vs ")
+    chartTitle = Join(Array(outputTitle, inputTitle), " vs ")
     
     ' Select the range
     Range(dataRange).Select
@@ -72,9 +75,17 @@ Sub chart_data(dataRange As String, _
     
     ' Add the chart title text
     ActiveChart.chartTitle.Text = chartTitle
+    ' Add the transpose axis label
+    ActiveChart.Axes(xlCategory, xlPrimary).HasTitle = True
+    ActiveChart.Axes(xlCategory, xlPrimary).AxisTitle.Text = inputTitle
+    ' Add the vertical axis label
+    ActiveChart.Axes(xlValue, xlPrimary).HasTitle = True
+    ActiveChart.Axes(xlValue, xlPrimary).AxisTitle.Text = outputTitle
 
     MsgBox "Hello, world!"
 
 End Sub 'Sub chart_data(dataRange As String, _
 '   inputTitleCell As String, outputTitleCell As String _
 ' )
+
+
