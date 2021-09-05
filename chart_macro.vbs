@@ -119,6 +119,6 @@ Sub style_chart_series(aSeries As Series)
     ' line color [RGB]
     aSeries.Format.Line.ForeColor.RGB = RGB(68, 114, 196)
 
-End Sub
+End Sub 'style_chart_series(aSeries As Series)
 
 
