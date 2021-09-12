@@ -5,9 +5,12 @@ Sub compare_csvs()
 '
 ' Keyboard Shortcut: Ctrl+Shift+R
 '
-    Dim d_in_files As FileDialog        ' Dialog to ask for input CSVs
-    Dim d_out_file As FileDialog       ' Dialog to ask for location to save
-    Dim this_path As String             ' The directory that this workbook runs from
+    Dim d_in_files As FileDialog            ' Dialog to ask for input CSVs
+    Dim in_filenames() As String            ' Input CSV filenames
+    Dim d_out_file As FileDialog            ' Dialog to ask for location to save
+    Dim this_path As String                 ' The directory that this workbook runs from
+    Dim curr_in_file_subdirs() As String    ' The subdirectories of the current input file
+    Dim curr_sheet_name As String           ' The name of the corresponding worksheet
 
     ' Build the path
     this_path = (ThisWorkbook.Path & "\")
@@ -20,9 +23,10 @@ Sub compare_csvs()
     d_in_files.InitialFileName = this_path                              ' start in this directory
     d_in_files.Show                                                     ' show the dialog after building it
 
-    ' Loop through and print the file names
+    ' Copy the filenames selected
+    ReDim in_filenames(d_in_files.SelectedItems.Count)
     For k = 1 To d_in_files.SelectedItems.Count
-        MsgBox d_in_files.SelectedItems.Item(k)
+        in_filenames(k) = d_in_files.SelectedItems.Item(k)
     Next k
 
     ' Ask for path to save to
@@ -31,9 +35,24 @@ Sub compare_csvs()
     d_out_file.InitialFileName = this_path                              ' start in this directory
     d_out_file.Show                                                     ' show the dialog after building it
 
-    ' Create and save the output file
+    ' Create the output file
     Workbooks.Add
-    ActiveWorkbook.SaveAs d_out_file.SelectedItems.Item(1)
+    ' Add a sheet for the charts
+    Sheets.Item(1).Name = "Chart Summary"
+    ' Add each CSV to the workbook
+    For k = 1 To UBound(in_filenames)
+        ' Split the current file's path
+        curr_in_file_subdirs = Split(in_filenames(k), "\")
+        ' Create the name of the sheet "(k) file_name.csv"
+        curr_sheet_name = "(" & k & ") " & curr_in_file_subdirs(UBound(curr_in_file_subdirs))
+        ' Add the sheet
+        Sheets.Add(After:=Sheets(Sheets.Count)).Name = curr_sheet_name
+    Next k
+
+    ' If a save file selected, then
+    If (d_out_file.SelectedItems.Count >= 1) Then
+        ' Save the output file
+        ActiveWorkbook.SaveAs d_out_file.SelectedItems.Item(1)
+    End If '(d_out_file.SelectedItems.Count < 1)
 
 End Sub 'compare_csvs()
-
