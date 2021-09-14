@@ -6,11 +6,19 @@ Sub compare_csvs()
 ' Keyboard Shortcut: Ctrl+Shift+R
 '
 ' by      : Leomar Duran <https://github.com/lduran2/>
-' when    : 2021-09-12 t20:45
+' when    : 2021-09-14 t04:30
 ' self    : https://github.com/lduran2/excel-chart-macro
-' version : 1.3
+' version : 2.0
 '
 ' changelog :
+'     v2.0 -- 2021-09-14 t04:30
+'         integrated with chart_cols
+'         plots charts from the copied worksheet data on the
+'             "Chart Summary" worksheet
+'
+'     v1.3.1 -- 2021-09-14 t01:36
+'         abstract creating the output workbook (chart summary, CSV copies)
+'
 '     v1.3 -- 2021-09-12 t20:45
 '         successfully copying CSV files into the worksheets
 '
@@ -43,7 +51,7 @@ Sub compare_csvs()
     
     ' Create the output workbook from the CSV files and ensure it's active
     create_output_workbook(in_filenames).Activate
-
+    
     ' Loop through the "save filenames" (there should be <= 1)
     For k = 1 To UBound(out_filenames)
         ' Save the output file
@@ -115,28 +123,40 @@ Function create_output_workbook(in_filenames() As String) As Workbook
 ' Sets up the output workbook to be saved by creating the chart summary
 ' page, and copying the CSV files into worksheets following it.
 '
+    Const summary_sheet_name = "Chart Summary"  ' Name of the page to place the charts in
+    Const in_col = "A"                          ' Column to graph as x
+    Const title_row = 9                         ' Row for the column titles
+
+    ' parallel arrays for parameters of output columns
+    Dim out_cols As Variant                     ' Columns to graph as y
+    out_cols = Array("B", "C", "D")
+    Dim out_bounds As Variant                   ' Lower and Upper bounds of y
+    out_bounds = Array(Array(0, 90), Array(0, 3000), Array(0, 3000))
+    
+    
     Dim out_workbook As Workbook            ' Points to the current sheet in the output workbook
     Dim curr_in_file_subdirs() As String    ' The subdirectories of the current input file
     Dim curr_sheet_name As String           ' The name of the corresponding worksheet
     Dim curr_workbook_nsame As String       ' The name of the current workbook
+    Dim out_col As Variant                  ' The current output column
     
     ' Create and store the output file workbook
     Set out_workbook = Workbooks.Add
     ' Add a sheet for the charts
-    Sheets.Item(1).Name = "Chart Summary"
+    Sheets.Item(1).Name = summary_sheet_name
     ' Add each CSV to the workbook
-    For k = 1 To UBound(in_filenames)
+    For i_file = 1 To UBound(in_filenames)
         ' Split the current file's path
-        curr_in_file_subdirs = Split(in_filenames(k), "\")
-        ' Create the name of the workbook and the corresponding sheet "(k) file_name.csv"
+        curr_in_file_subdirs = Split(in_filenames(i_file), "\")
+        ' Create the name of the workbook and the corresponding sheet "(i_file) file_name.csv"
         curr_csv_workbook_name = curr_in_file_subdirs(UBound(curr_in_file_subdirs))
-        curr_sheet_name = "(" & k & ") " & curr_csv_workbook_name
+        curr_sheet_name = "(" & i_file & ") " & curr_csv_workbook_name
 
         ' Add the sheet to the output workbook
         Sheets.Add(After:=Sheets(Sheets.Count)).Name = curr_sheet_name
 
         ' Open the corresponding CSV file
-        Workbooks.Open(in_filenames(k)).Activate
+        Workbooks.Open(in_filenames(i_file)).Activate
 
         ' Copy the cells of the CSV workbook into the output worksheet
         Sheets(1).Cells.Copy _
@@ -147,9 +167,17 @@ Function create_output_workbook(in_filenames() As String) As Workbook
         Workbooks(curr_csv_workbook_name).Close
         ' Set the output workbook to active
         out_workbook.Activate
-    Next k
+    
+        ' Loop through each output column
+        For i_col = 0 To UBound(out_cols)
+            chart_cols Sheets(summary_sheet_name), curr_csv_workbook_name, _
+                in_col, out_cols(i_col), out_bounds(i_col), title_row
+        Next i_col
+    Next i_file
 
     ' Return the output workbook
     Set create_output_workbook = out_workbook
-End Function
+End Function 'create_output_workbook(in_filenames() As String) As Workbook
+
+
 
