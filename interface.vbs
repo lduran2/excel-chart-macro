@@ -32,11 +32,7 @@ Sub compare_csvs()
 '
     Dim in_filenames() As String            ' Input CSV filenames
     Dim out_filenames() As String           ' Output files to save to (should be <= 1)
-    Dim out_workbook As Workbook            ' Points to the current sheet in the output workbook
     Dim this_path As String                 ' The directory that this workbook runs from
-    Dim curr_in_file_subdirs() As String    ' The subdirectories of the current input file
-    Dim curr_sheet_name As String           ' The name of the corresponding worksheet
-    Dim curr_workbook_nsame As String       ' The name of the current workbook
     
     ' Build the path
     this_path = (ThisWorkbook.path & "\")
@@ -44,35 +40,9 @@ Sub compare_csvs()
     ' Ask for multiple CSV files and save path, starting in this directory
     in_filenames = input_csv_files(this_path)
     out_filenames = input_save_fle(this_path)
-
-    ' Create and store the output file workbook
-    Set out_workbook = Workbooks.Add
-    ' Add a sheet for the charts
-    Sheets.Item(1).Name = "Chart Summary"
-    ' Add each CSV to the workbook
-    For k = 1 To UBound(in_filenames)
-        ' Split the current file's path
-        curr_in_file_subdirs = Split(in_filenames(k), "\")
-        ' Create the name of the workbook and the corresponding sheet "(k) file_name.csv"
-        curr_csv_workbook_name = curr_in_file_subdirs(UBound(curr_in_file_subdirs))
-        curr_sheet_name = "(" & k & ") " & curr_csv_workbook_name
-
-        ' Add the sheet to the output workbook
-        Sheets.Add(After:=Sheets(Sheets.Count)).Name = curr_sheet_name
-
-        ' Open the corresponding CSV file
-        Workbooks.Open(in_filenames(k)).Activate
-
-        ' Copy the cells of the CSV workbook into the output worksheet
-        Sheets(1).Cells.Copy _
-            out_workbook.Sheets(out_workbook.Sheets.Count).Cells
-        '
-
-        ' Close the CSV file
-        Workbooks(curr_csv_workbook_name).Close
-        ' Set the output workbook to active
-        out_workbook.Activate
-    Next k
+    
+    ' Create the output workbook from the CSV files and ensure it's active
+    create_output_workbook(in_filenames).Activate
 
     ' Loop through the "save filenames" (there should be <= 1)
     For k = 1 To UBound(out_filenames)
@@ -137,4 +107,49 @@ Function copy_selected_files(items As FileDialogSelectedItems) As Variant
     ' Return the copy
     copy_selected_files = filenames
 End Function 'copy_selected_files(items As FileDialogSelectedItems) As Variant
+' --------------------------------------------------------------------
+
+Function create_output_workbook(in_filenames() As String) As Workbook
+'
+' create_output_workbook Function
+' Sets up the output workbook to be saved by creating the chart summary
+' page, and copying the CSV files into worksheets following it.
+'
+    Dim out_workbook As Workbook            ' Points to the current sheet in the output workbook
+    Dim curr_in_file_subdirs() As String    ' The subdirectories of the current input file
+    Dim curr_sheet_name As String           ' The name of the corresponding worksheet
+    Dim curr_workbook_nsame As String       ' The name of the current workbook
+    
+    ' Create and store the output file workbook
+    Set out_workbook = Workbooks.Add
+    ' Add a sheet for the charts
+    Sheets.Item(1).Name = "Chart Summary"
+    ' Add each CSV to the workbook
+    For k = 1 To UBound(in_filenames)
+        ' Split the current file's path
+        curr_in_file_subdirs = Split(in_filenames(k), "\")
+        ' Create the name of the workbook and the corresponding sheet "(k) file_name.csv"
+        curr_csv_workbook_name = curr_in_file_subdirs(UBound(curr_in_file_subdirs))
+        curr_sheet_name = "(" & k & ") " & curr_csv_workbook_name
+
+        ' Add the sheet to the output workbook
+        Sheets.Add(After:=Sheets(Sheets.Count)).Name = curr_sheet_name
+
+        ' Open the corresponding CSV file
+        Workbooks.Open(in_filenames(k)).Activate
+
+        ' Copy the cells of the CSV workbook into the output worksheet
+        Sheets(1).Cells.Copy _
+            out_workbook.Sheets(out_workbook.Sheets.Count).Cells
+        '
+
+        ' Close the CSV file
+        Workbooks(curr_csv_workbook_name).Close
+        ' Set the output workbook to active
+        out_workbook.Activate
+    Next k
+
+    ' Return the output workbook
+    Set create_output_workbook = out_workbook
+End Function
 
