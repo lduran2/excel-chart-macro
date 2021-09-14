@@ -1,16 +1,14 @@
-Sub compare_csvs()
-'
-' compare_csvs Macro
-' Compares multiple CSV files visually.
-'
-' Keyboard Shortcut: Ctrl+Shift+R
+' ./interface.vbs
 '
 ' by      : Leomar Duran <https://github.com/lduran2/>
-' when    : 2021-09-14 t04:30
+' when    : 2021-09-14 t05:48
 ' self    : https://github.com/lduran2/excel-chart-macro
 ' version : 2.0
 '
 ' changelog :
+'     v2.1 -- 2021-09-14 t05:48
+'         repositioned and resized charts in the "Chart Summary" worksheet
+'
 '     v2.0 -- 2021-09-14 t04:30
 '         integrated with chart_cols
 '         plots charts from the copied worksheet data on the
@@ -38,26 +36,42 @@ Sub compare_csvs()
 '     v1.0 -- 2021-09-12 t16:38
 '         asks User Agent for input CSV files and echos them to the user
 '
+Type Dimension
+' The dimensions of a box
+    Top As Integer      ' Vertical location of top left corner
+    Left As Integer     ' Horizontal location of top left corner
+    Width As Integer
+    Height As Integer
+End Type 'Dimension
+' --------------------------------------------------------------------
+
+Sub compare_csvs()
+'
+' compare_csvs Macro
+' Compares multiple CSV files visually.
+'
+' Keyboard Shortcut: Ctrl+Shift+R
+'
     Dim in_filenames() As String            ' Input CSV filenames
     Dim out_filenames() As String           ' Output files to save to (should be <= 1)
     Dim this_path As String                 ' The directory that this workbook runs from
-    
+
     ' Build the path
     this_path = (ThisWorkbook.path & "\")
-    
+
     ' Ask for multiple CSV files and save path, starting in this directory
     in_filenames = input_csv_files(this_path)
     out_filenames = input_save_fle(this_path)
-    
+
     ' Create the output workbook from the CSV files and ensure it's active
     create_output_workbook(in_filenames).Activate
-    
+
     ' Loop through the "save filenames" (there should be <= 1)
     For k = 1 To UBound(out_filenames)
         ' Save the output file
         ActiveWorkbook.SaveAs out_filenames(k)
     Next
-
+    
 End Sub 'compare_csvs()
 ' --------------------------------------------------------------------
 
@@ -67,7 +81,7 @@ Function input_csv_files(path As String) As Variant
 ' Asks the user for CSV data files for input, returned as an array.
 '
     Dim d_in_files As FileDialog            ' Dialog to ask for input CSVs
-    
+
     ' Ask for multiple CSV files, starting in this directory
     MsgBox "Please select the CSV data files for input."
     Set d_in_files = Application.FileDialog(msoFileDialogOpen)          ' Save file dialog
@@ -75,7 +89,7 @@ Function input_csv_files(path As String) As Variant
     d_in_files.Filters.Add "Comma Separated Value files", "*.csv", 1    ' filter out CSV files
     d_in_files.InitialFileName = path                                   ' start in this directory
     d_in_files.Show                                                     ' show the dialog after building it
-    
+
     ' Return the filenames
     input_csv_files = copy_selected_files(d_in_files.SelectedItems)
 End Function 'input_csv_files(path As String) As Variant
@@ -87,7 +101,7 @@ Function input_save_fle(path As String) As Variant
 ' Asks the user for 1 path to save to, returned as an array.
 '
     Dim d_out_file As FileDialog            ' Dialog to ask for location to save
-    
+
     ' Ask for path to save to
     MsgBox "Please choose a path to save the charts."
     Set d_out_file = Application.FileDialog(msoFileDialogSaveAs)        ' Open file dialog
@@ -105,13 +119,13 @@ Function copy_selected_files(items As FileDialogSelectedItems) As Variant
 ' array.
 '
     Dim filenames() As String               ' The selected files to copy
-    
+
     ' Copy the filenames selected
     ReDim filenames(items.Count)
     For k = 1 To items.Count
         filenames(k) = items.Item(k)
     Next k
-    
+
     ' Return the copy
     copy_selected_files = filenames
 End Function 'copy_selected_files(items As FileDialogSelectedItems) As Variant
@@ -132,14 +146,16 @@ Function create_output_workbook(in_filenames() As String) As Workbook
     out_cols = Array("B", "C", "D")
     Dim out_bounds As Variant                   ' Lower and Upper bounds of y
     out_bounds = Array(Array(0, 90), Array(0, 3000), Array(0, 3000))
-    
-    
+    Dim chart_size As Variant                   ' [Width Height] of the chart's container box
+    chart_size = Array(360, 216)
+
     Dim out_workbook As Workbook            ' Points to the current sheet in the output workbook
     Dim curr_in_file_subdirs() As String    ' The subdirectories of the current input file
     Dim curr_sheet_name As String           ' The name of the corresponding worksheet
     Dim curr_workbook_nsame As String       ' The name of the current workbook
     Dim out_col As Variant                  ' The current output column
-    
+    Dim chart_dimensions As Dimension       ' Dimensions of the current chart container box
+
     ' Create and store the output file workbook
     Set out_workbook = Workbooks.Add
     ' Add a sheet for the charts
@@ -167,17 +183,24 @@ Function create_output_workbook(in_filenames() As String) As Workbook
         Workbooks(curr_csv_workbook_name).Close
         ' Set the output workbook to active
         out_workbook.Activate
-    
+
         ' Loop through each output column
         For i_col = 0 To UBound(out_cols)
+            chart_dimensions.Top = (chart_size(1) * i_col)
+            chart_dimensions.Left = (chart_size(0) * (i_file - 1))
+            chart_dimensions.Width = chart_size(0)
+            chart_dimensions.Height = chart_size(1)
             chart_cols Sheets(summary_sheet_name), curr_csv_workbook_name, _
-                in_col, out_cols(i_col), out_bounds(i_col), title_row
+                in_col, out_cols(i_col), out_bounds(i_col), title_row, _
+                chart_dimensions
         Next i_col
     Next i_file
-
+    
+    ' Focus on the chart summary
+    ActiveWorkbook.Sheets(summary_sheet_name).Activate
+    
+    
     ' Return the output workbook
     Set create_output_workbook = out_workbook
 End Function 'create_output_workbook(in_filenames() As String) As Workbook
-
-
-
+' --------------------------------------------------------------------
